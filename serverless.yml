@@ -1,0 +1,35 @@
+service: trello-auto-duplicate-tasks-service
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  environment:
+    NODE_ENV: dev
+
+plugins:
+  - serverless-plugin-typescript 
+  - serverless-offline
+
+package:
+  exclude:
+    - config/.env.stg
+    - config/.env.pro
+  include:
+    - config/.env.dev
+
+functions:
+  test:
+    handler: app/handler.testTrelloAPIHandler
+    events:
+      - http:
+          path: test
+          method: get
+  weekly-job:
+    handler: app/handler.populateWeekendTasksHandler
+    events:
+      - http:
+          path: weekend-jobs
+          method: post
+          private: true
+      - eventBridge:
+          schedule: cron(0 0 ? * SAT-SAT *)
